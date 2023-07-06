@@ -1,0 +1,4 @@
+redis
+quart
+quart_discord
+python-dotenv
