@@ -1,0 +1,12 @@
+<head>
+    <title>Test</title>
+</head>
+
+<body>
+    <h1>Select a server</h1>
+    <ul>
+        {% for guild in shared_guilds %}
+        <li><a href="/dashboard/{{guild.id}}"><button>{{guild.name}}</button></a></li>
+        {%endfor%}
+    </ul>
+</body>

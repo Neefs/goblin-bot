@@ -1,8 +1,12 @@
 <head>
     <title>Test</title>
 </head>
+
 <body>
-    <h1>Hell</h1>
-    Click here to login:
+    <h1>Ticket Dashboard Bot</h1>
+    {% if not authorized %}
     <a href="{{url_for('login')}}"><button>Login with discord</button></a>
+    {% else %}
+    <a href="{{url_for('dashboard')}}"><button>Open Dashboard</button></a>
+    {% endif %}
 </body>
