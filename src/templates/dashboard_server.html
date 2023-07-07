@@ -1,0 +1,14 @@
+<head>
+    <title>Test</title>
+</head>
+
+<body>
+    <h1>{{guild.name}}</h1>
+    <h3>Your prefix is: {{prefix}}</h3>
+    <form action="{{ url_for('prefix_change')}}" method="post">
+        <label for="prefix"></label>
+        <input type="text" id="prefix" name="prefix" maxlength="3">
+        <input type="hidden" id="guild_id" name="guild_id" value="{{guild.id}}">
+    </form>
+    
+</body>

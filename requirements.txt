@@ -3,3 +3,5 @@ quart
 quart_discord
 python-dotenv
 jishaku
+discord.py[speed]
+asyncpg

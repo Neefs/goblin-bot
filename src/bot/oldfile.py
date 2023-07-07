@@ -16,6 +16,7 @@ class TicketBot(commands.AutoShardedBot):
         
         self.extensions_path = [
             "jishaku",
+            "utils.database",
             *[
                 f"extensions.{ext[:-3]}"
                 for ext in os.listdir("extensions")

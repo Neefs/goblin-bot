@@ -1,7 +1,7 @@
-from quart import Quart, render_template, redirect, url_for
+from quart import Quart, render_template, redirect, url_for, request
 from quart_discord import DiscordOAuth2Session
 from dotenv import load_dotenv
-from bot.bot import TicketBot
+from bot.objects.bot import TicketBot
 import os
 import discord
 import asyncio
@@ -41,12 +41,12 @@ async def callback():
 	except:
 		pass
 
-	return await redirect(url_for("dashboard"))
+	return redirect(url_for("dashboard"))
 
 @app.route("/dashboard")
 async def dashboard():
     if not await discord_oauth.authorized:
-        return await redirect(url_for("login"))
+        return redirect(url_for("login"))
     
     user_guilds=await discord_oauth.fetch_guilds()
     
@@ -62,10 +62,21 @@ async def dashboard():
 
 @app.route("/dashboard/<int:guild_id>")
 async def dashboard_server(guild_id):
-    guild =  bot.get_guild(guild_id)
+    guild = bot.get_guild(guild_id)
     if not guild:
-        return '',404
-    return f"The member count of the guild is: {guild.member_count}"
+        return redirect(f'https://discord.com/oauth2/authorize?&client_id={app.config["DISCORD_CLIENT_ID"]}&scope=bot&permissions=8&guild_id={guild_id}&response_type=code&redirect_uri={app.config["DISCORD_REDIRECT_URI"]}')
+    return await render_template("dashboard_server.html", guild=guild, prefix=await bot.db.get_prefix(guild.id))
+
+@app.route("/prefix_change", methods=["POST"])
+async def prefix_change():
+    form = await request.form
+    gid = int(form["guild_id"])
+    await bot.db.update_prefix(gid, form["prefix"])
+    return redirect(url_for("dashboard_server", guild_id=gid))
+
+     
+    
+    
 
 
 
