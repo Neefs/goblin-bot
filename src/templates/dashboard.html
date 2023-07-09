@@ -1,12 +1,14 @@
-<head>
-    <title>Test</title>
-</head>
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% set active_page = "dashboard" %}
+{% block html_head %}
+{% endblock %}
 
-<body>
+{% block content %}
     <h1>Select a server</h1>
     <ul>
         {% for guild in shared_guilds %}
         <li><a href="/dashboard/{{guild.id}}"><button>{{guild.name}}</button></a></li>
         {%endfor%}
     </ul>
-</body>
+{%endblock%}

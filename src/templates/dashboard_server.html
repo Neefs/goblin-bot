@@ -1,8 +1,10 @@
-<head>
-    <title>Test</title>
-</head>
+{% extends "base.html" %}
+{% block title %}Dashboard | {{guild.name}}{% endblock %}
+{% set active_page = "dashboard" %}
+{% block html_head %}
+{% endblock %}
 
-<body>
+{% block content %}
     <h1>{{guild.name}}</h1>
     <h3>Your prefix is: {{prefix}}</h3>
     <form action="{{ url_for('prefix_change')}}" method="post">
@@ -11,4 +13,4 @@
         <input type="hidden" id="guild_id" name="guild_id" value="{{guild.id}}">
     </form>
     
-</body>
+{% endblock %}
