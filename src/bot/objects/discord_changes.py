@@ -7,10 +7,10 @@ class Embed(discord.Embed):
     bot = None
     def __init__(self, *args, **kwargs):
         if Embed.bot:
-            self.set_footer(text="Made by Gio#8765",
+            self.set_footer(text="Made by glidin",
                             icon_url=Embed.bot.user.display_avatar.url)
         else:
-            self.set_footer(text="Made by Gio#8765")
+            self.set_footer(text="Made by glidin")
         self.timestamp = discord.utils.utcnow()
         super().__init__(*args, **kwargs)
         if self.color is None:

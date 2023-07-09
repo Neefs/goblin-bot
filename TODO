@@ -1,1 +1,6 @@
-Create a dashboard page that will list shared servers with bot and be able to Change the prefix of the bot in that server using it 
+Backend:
+Create database for tickets (guild_id, channel_id, ticket_id INCREMENT by 1, claimedby, createdby, users LIST of user id's)
+
+
+Frontend:
+after backend

@@ -1,6 +1,6 @@
 import inspect
 from datetime import datetime
-
+import os
 from discord.ext import commands
 
 from bot.utils.TextFormat import TextFormat
@@ -144,4 +144,6 @@ class Logger(commands.Cog):
 
 
 async def setup(bot):
+    if not "logs" in os.listdir():
+        os.mkdir("logs")
     await bot.add_cog(Logger())
