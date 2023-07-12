@@ -13,7 +13,6 @@ class Settings(commands.GroupCog, name="settings"):
         self.bot.logger.info(f'✅ {self.__class__.__name__} is ready!')
 
     @app_commands.command(name="list", description="Gives you a list of all the settings")
-    @app_commands.checs
     async def _list(self, interaction:discord.Interaction):
         await interaction.response.send_message("Coming sooooooon")
 
