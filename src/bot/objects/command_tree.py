@@ -1,6 +1,8 @@
 from discord import app_commands, Embed
 import discord
 import traceback as tb
+
+from discord.interactions import Interaction
 from bot.objects.discord_changes import Embed
 
 class CommandTree(app_commands.CommandTree):
@@ -10,7 +12,7 @@ class CommandTree(app_commands.CommandTree):
 
     @staticmethod
     async def _respond_with_check(
-        interaction: discord.Interaction, embed: discord.Embed, ephemeral: bool = True
+        interaction: Interaction, embed: discord.Embed, ephemeral: bool = True
     ) -> None:
         try:
             await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
@@ -19,11 +21,16 @@ class CommandTree(app_commands.CommandTree):
                 await interaction.followup.send(embed=embed)
             except:
                 await interaction.channel.send(embed=embed)
+
+    async def interaction_check(self, interaction:Interaction):
+        if not interaction.guild:
+            raise app_commands.NoPrivateMessage("Commands are only available in guilds.")
+        return True
     
-    async def on_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError) -> None:
+    async def on_error(self, interaction: Interaction, error: app_commands.AppCommandError) -> None:
         bot = interaction.client
         ignored = ()
-        read_args = ()
+        read_args = (app_commands.NoPrivateMessage)
         if isinstance(error, ignored):
             return
         elif isinstance(error, read_args):

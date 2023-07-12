@@ -14,6 +14,7 @@ DB_DATABASE = os.getenv("DB_DATABASE")
 class Database(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.prefixes = {}
 
     @staticmethod
     async def get_pool():
@@ -30,6 +31,7 @@ class Database(commands.Cog):
     async def cog_load(self) -> None:
         Database.pool= await self.get_pool()
         await self.init_tables()
+        await self.cache_prefixes()
         
         return await super().cog_load()
 
@@ -55,25 +57,45 @@ class Database(commands.Cog):
             #CREATE TABLES HERE
             await conn.execute("CREATE TABLE IF NOT EXISTS prefix(guild_id BIGINT, prefix varchar(6))")
 
-    async def get_prefix(self, guild_id) -> str:
-        async with self.pool.acquire() as conn:
-            conn:asyncpg.Connection
-            data = self.format_json(await conn.fetchrow("SELECT prefix FROM prefix WHERE guild_id = $1", guild_id))
-            if data:
-                return data.get("prefix")
-            return None
+    async def get_prefix(self, guild_id, return_none=False) -> str:
+        """
+        :params: 
+        return_none: if false prefix will be created when no prefix is found
+        """
+        prefix = self.prefixes.get(guild_id)
+        if not prefix:
+            if return_none:
+                return None
+            else:
+                await self.add_prefix(guild_id)
+                return self.bot.default_prefix
+        return prefix
+    
 
     async def add_prefix(self, guild_id, prefix=None) -> None:
         if not prefix:
             prefix = self.bot.default_prefix
+        if self.prefixes.get(guild_id):
+            self.bot.logger.danger(f"WHY THE FUCK {guild_id} TRYING TO HAVE 2 PREFIXES")
+            return None
         async with self.pool.acquire() as conn:
             conn:asyncpg.Connection
             await conn.execute("INSERT INTO prefix(guild_id, prefix) VALUES ($1, $2)", guild_id, prefix)
+            self.prefixes[guild_id] = prefix
 
     async def update_prefix(self, guild_id, prefix):
         async with self.pool.acquire() as conn:
             conn:asyncpg.Connection
             await conn.execute("UPDATE prefix SET prefix = $1 WHERE guild_id = $2", prefix, guild_id)
+            self.prefixes[guild_id] = prefix
+
+    async def cache_prefixes(self):
+        async with self.pool.acquire() as conn:
+            conn:asyncpg.Connection
+            data = self.format_json(await conn.fetch("SELECT * FROM prefix"))
+            self.prefixes = data
+
+
             
             
 

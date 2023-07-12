@@ -9,7 +9,7 @@ import asyncio
 DEBUG = True
 
 load_dotenv(".env")
-app = Quart(__name__)
+app = Quart(__name__, template_folder="frontend")
 
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.config["DISCORD_CLIENT_ID"] = int(os.getenv("DISCORD_CLIENT_ID"))   # Discord client ID.
@@ -67,6 +67,14 @@ async def dashboard_server(guild_id):
         return redirect(f'https://discord.com/oauth2/authorize?&client_id={app.config["DISCORD_CLIENT_ID"]}&scope=bot&permissions=8&guild_id={guild_id}&response_type=code&redirect_uri={app.config["DISCORD_REDIRECT_URI"]}')
     return await render_template("dashboard_server.html", guild=guild, prefix=await bot.db.get_prefix(guild.id))
 
+@app.route("/dashboard/<int:guild_id>/settings")
+async def dashboard_settings(guild_id):
+    guild = bot.get_guild(guild_id)
+    if not guild:
+        #actually handle something here
+        return redirect(f'https://discord.com/oauth2/authorize?&client_id={app.config["DISCORD_CLIENT_ID"]}&scope=bot&permissions=8&guild_id={guild_id}&response_type=code&redirect_uri={app.config["DISCORD_REDIRECT_URI"]}')
+    return f"<h1>Coming Soooooon {guild.name}<h1>"
+
 @app.route("/prefix_change", methods=["POST"])
 async def prefix_change():
     form = await request.form
@@ -86,4 +94,4 @@ async def prefix_change():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=DEBUG)
