@@ -12,13 +12,18 @@ load_dotenv(".env")
 app = Quart(__name__, template_folder="frontend")
 
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
-app.config["DISCORD_CLIENT_ID"] = int(os.getenv("DISCORD_CLIENT_ID"))   # Discord client ID.
-app.config["DISCORD_CLIENT_SECRET"] = os.getenv("DISCORD_CLIENT_SECRET")   # Discord client secret.
+app.config["DISCORD_CLIENT_ID"] = int(
+    os.getenv("DISCORD_CLIENT_ID")
+)  # Discord client ID.
+app.config["DISCORD_CLIENT_SECRET"] = os.getenv(
+    "DISCORD_CLIENT_SECRET"
+)  # Discord client secret.
 app.config["DISCORD_BOT_TOKEN"] = os.getenv("DISCORD_BOT_TOKEN")
-app.config["DISCORD_REDIRECT_URI"] = "http://127.0.0.1:5000/callback" 
+app.config["DISCORD_REDIRECT_URI"] = "http://127.0.0.1:5000/callback"
 
 discord_oauth = DiscordOAuth2Session(app)
 bot = TicketBot(prefix=";", intents=discord.Intents.all())
+
 
 @app.before_serving
 async def before():
@@ -26,30 +31,36 @@ async def before():
     loop.set_debug(DEBUG)
     loop.create_task(bot.start(app.config["DISCORD_BOT_TOKEN"]))
 
-@app.route('/')
+
+@app.route("/")
 async def home():
-    return await render_template('index.html', authorized = await discord_oauth.authorized)
+    return await render_template(
+        "index.html", authorized=await discord_oauth.authorized
+    )
+
 
 @app.route("/login")
 async def login():
     return await discord_oauth.create_session()
 
+
 @app.route("/callback")
 async def callback():
-	try:
-		await discord_oauth.callback()
-	except:
-		pass
+    try:
+        await discord_oauth.callback()
+    except:
+        pass
 
-	return redirect(url_for("dashboard"))
+    return redirect(url_for("dashboard"))
+
 
 @app.route("/dashboard")
 async def dashboard():
     if not await discord_oauth.authorized:
         return redirect(url_for("login"))
-    
-    user_guilds=await discord_oauth.fetch_guilds()
-    
+
+    user_guilds = await discord_oauth.fetch_guilds()
+
     shared_guilds = []
 
     for guild in user_guilds:
@@ -58,22 +69,31 @@ async def dashboard():
 
     shared_guilds = [bot.get_guild(i) for i in shared_guilds]
 
-    return await render_template('dashboard.html', shared_guilds=shared_guilds)
+    return await render_template("dashboard.html", shared_guilds=shared_guilds)
+
 
 @app.route("/dashboard/<int:guild_id>")
 async def dashboard_server(guild_id):
     guild = bot.get_guild(guild_id)
     if not guild:
-        return redirect(f'https://discord.com/oauth2/authorize?&client_id={app.config["DISCORD_CLIENT_ID"]}&scope=bot&permissions=8&guild_id={guild_id}&response_type=code&redirect_uri={app.config["DISCORD_REDIRECT_URI"]}')
-    return await render_template("dashboard_server.html", guild=guild, prefix=await bot.db.get_prefix(guild.id))
+        return redirect(
+            f'https://discord.com/oauth2/authorize?&client_id={app.config["DISCORD_CLIENT_ID"]}&scope=bot&permissions=8&guild_id={guild_id}&response_type=code&redirect_uri={app.config["DISCORD_REDIRECT_URI"]}'
+        )
+    return await render_template(
+        "dashboard_server.html", guild=guild, prefix=await bot.db.get_prefix(guild.id)
+    )
+
 
 @app.route("/dashboard/<int:guild_id>/settings")
 async def dashboard_settings(guild_id):
     guild = bot.get_guild(guild_id)
     if not guild:
-        #actually handle something here
-        return redirect(f'https://discord.com/oauth2/authorize?&client_id={app.config["DISCORD_CLIENT_ID"]}&scope=bot&permissions=8&guild_id={guild_id}&response_type=code&redirect_uri={app.config["DISCORD_REDIRECT_URI"]}')
+        # actually handle something here
+        return redirect(
+            f'https://discord.com/oauth2/authorize?&client_id={app.config["DISCORD_CLIENT_ID"]}&scope=bot&permissions=8&guild_id={guild_id}&response_type=code&redirect_uri={app.config["DISCORD_REDIRECT_URI"]}'
+        )
     return f"<h1>Coming Soooooon {guild.name}<h1>"
+
 
 @app.route("/prefix_change", methods=["POST"])
 async def prefix_change():
@@ -82,16 +102,6 @@ async def prefix_change():
     await bot.db.update_prefix(gid, form["prefix"])
     return redirect(url_for("dashboard_server", guild_id=gid))
 
-     
-    
-    
 
-
-
-
-
-
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=DEBUG)

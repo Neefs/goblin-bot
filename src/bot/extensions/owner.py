@@ -1,23 +1,22 @@
 from discord.ext import commands
 from bot.objects.bot import TicketBot
-from typing import (Optional, Literal)
+from typing import Optional, Literal
 import discord
 from bot.objects.discord_changes import Embed
 
 
 class Owner(commands.Cog):
-    def __init__(self, bot:TicketBot):
+    def __init__(self, bot: TicketBot):
         self.bot = bot
 
-    async def cog_check(self, ctx:commands.Context):
+    async def cog_check(self, ctx: commands.Context):
         if await self.bot.is_owner(ctx.author):
             return True
         raise commands.NotOwner("You need to be an owner to run this command.")
-        
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.bot.logger.info(f'✅ {self.__class__.__name__} is ready!')
+        self.bot.logger.info(f"✅ {self.__class__.__name__} is ready!")
 
     @commands.command(name="synccommands", aliases=["synccommand", "sync", "sc"])
     async def sync_commands(
@@ -109,8 +108,6 @@ class Owner(commands.Cog):
 
         view = ConfirmSyncView(self.bot)
         view.msg = await ctx.send("Are you sure", view=view)
-
-
 
 
 async def setup(bot):
