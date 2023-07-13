@@ -68,7 +68,7 @@ class TicketBot(commands.AutoShardedBot):
         await super().close()
     
     async def get_prefix(self, message: Message):
-        return self.db.get_prefix(message.guild.id, return_none=False)
+        return await self.db.get_prefix(message.guild.id, return_none=False)
 
     async def on_ready(self):
         self.logger.success(f"Logged on as {self.user}")

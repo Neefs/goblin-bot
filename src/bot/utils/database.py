@@ -3,6 +3,8 @@ import os
 from dotenv import load_dotenv
 import asyncio
 import asyncpg
+from typing import List
+import json
 
 
 load_dotenv(".env")
@@ -56,6 +58,7 @@ class Database(commands.Cog):
             conn:asyncpg.Connection
             #CREATE TABLES HERE
             await conn.execute("CREATE TABLE IF NOT EXISTS prefix(guild_id BIGINT, prefix varchar(6))")
+            await conn.execute("CREATE TABLE IF NOT EXISTS settings(guild_id BIGINT, admin_roles VARCHAR(300), support_roles VARCHAR(300), ticket_category BIGINT)")
 
     async def get_prefix(self, guild_id, return_none=False) -> str:
         """
@@ -95,9 +98,38 @@ class Database(commands.Cog):
             data = self.format_json(await conn.fetch("SELECT * FROM prefix"))
             self.prefixes = data
 
+    async def has_settings(self, guild_id):
+        async with self.pool.acquire() as conn:
+            conn:asyncpg.Connection
+            settings = self.format_json(await conn.fetchrow("SELECT * FROM settings WHERE guild_id = $1", guild_id))
+            return settings is not None
+        
+    async def create_settings(self, guild_id:int, mod_roles:list=[], admin_roles:list=[], ticket_category:int=None):
+        if await self.has_settings(guild_id):
+            return
+        async with self.pool.acquire() as conn:
+            conn:asyncpg.Connection
+            mod_roles = json.dumps(mod_roles)
+            admin_roles = json.dumps(admin_roles)
+            await conn.execute("INSERT INTO settings(guild_id, support_roles, admin_roles, ticket_category) VALUES ($1, $2, $3, $4)", guild_id, mod_roles, admin_roles, ticket_category)
+
 
             
-            
+    async def add_ticket_support_roles(self, guild_id, roles: int | List[int]):
+        async with self.pool.acquire() as conn:
+            conn:asyncpg.Connection
+            before = json.loads(await conn.fetchval("SELECT support_roles FROM settings WHERE guild_id = $1", guild_id))
+            if isinstance(roles, int):
+                if roles not in before:
+                    before.append(roles) 
+            else:
+                for role in roles:
+                    if role in before:
+                        continue
+                    if isinstance(role, int):
+                        before.append(role)
+            await conn.execute("UPDATE settings SET support_roles = $1 WHERE guild_id=$2", json.dumps(before), guild_id)
+
 
 
         
