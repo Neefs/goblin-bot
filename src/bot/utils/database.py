@@ -116,7 +116,7 @@ class Database(commands.Cog):
     async def create_settings(
         self,
         guild_id: int,
-        mod_roles: list = [],
+        support_roles: list = [],
         admin_roles: list = [],
         ticket_category: int = None,
     ):
@@ -124,17 +124,22 @@ class Database(commands.Cog):
             return
         async with self.pool.acquire() as conn:
             conn: asyncpg.Connection
-            mod_roles = json.dumps(mod_roles)
+            support_roles = json.dumps(support_roles)
             admin_roles = json.dumps(admin_roles)
             await conn.execute(
                 "INSERT INTO settings(guild_id, support_roles, admin_roles, ticket_category) VALUES ($1, $2, $3, $4)",
                 guild_id,
-                mod_roles,
+                support_roles,
                 admin_roles,
                 ticket_category,
             )
 
-    async def add_ticket_support_roles(self, guild_id, roles: int | List[int]):
+    async def add_ticket_support_roles(self, guild_id, roles: int | list[int]):
+        if not await self.has_settings(guild_id):
+            if isinstance(roles, int):
+                roles = [roles]
+            await self.create_settings(guild_id, support_roles=roles)
+            return
         async with self.pool.acquire() as conn:
             conn: asyncpg.Connection
             before = json.loads(
@@ -157,6 +162,33 @@ class Database(commands.Cog):
                 guild_id,
             )
 
+    async def add_ticket_admin_roles(self, guild_id, roles: int | list[int]):
+        if not await self.has_settings(guild_id):
+            if isinstance(roles, int):
+                roles = [roles]
+            await self.create_settings(guild_id, admin_roles=roles)
+            return
+        async with self.pool.acquire() as conn:
+            conn: asyncpg.Connection
+            before = json.loads(
+                await conn.fetchval(
+                    "SELECT admin_roles FROM settings WHERE guild_id = $1", guild_id
+                )
+            )
+            if isinstance(roles, int):
+                if roles not in before:
+                    before.append(roles)
+            else:
+                for role in roles:
+                    if role in before:
+                        continue
+                    if isinstance(role, int):
+                        before.append(role)
+            await conn.execute(
+                "UPDATE settings SET admin_roles = $1 WHERE guild_id=$2",
+                json.dumps(before),
+                guild_id,
+            )
 
 async def setup(bot):
     db = Database(bot)
