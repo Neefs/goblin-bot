@@ -1,7 +1,8 @@
 from quart import Quart, render_template, redirect, url_for, request
 from quart_discord import DiscordOAuth2Session
 from dotenv import load_dotenv
-from bot.objects.bot import TicketBot
+from bot.objects.bot import GoblinBot
+from bot.objects.command_tree import CommandTree
 import os
 import discord
 import asyncio
@@ -22,7 +23,7 @@ app.config["DISCORD_BOT_TOKEN"] = os.getenv("DISCORD_BOT_TOKEN")
 app.config["DISCORD_REDIRECT_URI"] = "http://127.0.0.1:5000/callback"
 
 discord_oauth = DiscordOAuth2Session(app)
-bot = TicketBot(prefix=";", intents=discord.Intents.all())
+bot = GoblinBot(prefix=";", intents=discord.Intents.all(), tree_cls=CommandTree)
 
 
 @app.before_serving
@@ -87,12 +88,20 @@ async def dashboard_server(guild_id):
 @app.route("/dashboard/<int:guild_id>/settings")
 async def dashboard_settings(guild_id):
     guild = bot.get_guild(guild_id)
+
     if not guild:
         # actually handle something here
         return redirect(
             f'https://discord.com/oauth2/authorize?&client_id={app.config["DISCORD_CLIENT_ID"]}&scope=bot&permissions=8&guild_id={guild_id}&response_type=code&redirect_uri={app.config["DISCORD_REDIRECT_URI"]}'
         )
-    return f"<h1>Coming Soooooon {guild.name}<h1>"
+    if not bot.db.has_settings(guild_id):
+        # go through setup process here
+        pass
+    return await render_template(
+        "settings.html",
+        guild=guild,
+        support_roles=(await bot.db.get_ticket_support_roles(guild.id)) or [],
+    )
 
 
 @app.route("/prefix_change", methods=["POST"])

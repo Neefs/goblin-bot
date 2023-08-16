@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | {{guild.name}}{% endblock %}
+{% set active_page = "dashboard" %}
+{% block html_head %}
+{% endblock %}
+
+{% block content %}
+
+<h2>Support Roles:</h2>
+<ul>
+    {% for role in support_roles %}
+    <li>{{role.name}}</li>
+    {%endfor%}
+</ul>
+
+{% endblock %}

@@ -5,6 +5,7 @@ import asyncio
 import asyncpg
 from typing import List
 import json
+import discord
 
 
 load_dotenv(".env")
@@ -135,11 +136,12 @@ class Database(commands.Cog):
             )
 
     async def add_ticket_support_roles(self, guild_id, roles: int | list[int]):
+        """Returns a list of added roles"""
         if not await self.has_settings(guild_id):
             if isinstance(roles, int):
                 roles = [roles]
             await self.create_settings(guild_id, support_roles=roles)
-            return
+            return roles
         async with self.pool.acquire() as conn:
             conn: asyncpg.Connection
             before = json.loads(
@@ -153,6 +155,7 @@ class Database(commands.Cog):
             else:
                 for role in roles:
                     if role in before:
+                        roles.remove(role)
                         continue
                     if isinstance(role, int):
                         before.append(role)
@@ -161,13 +164,15 @@ class Database(commands.Cog):
                 json.dumps(before),
                 guild_id,
             )
+            return roles
 
     async def add_ticket_admin_roles(self, guild_id, roles: int | list[int]):
+        """Returns a list of added roles"""
         if not await self.has_settings(guild_id):
             if isinstance(roles, int):
                 roles = [roles]
             await self.create_settings(guild_id, admin_roles=roles)
-            return
+            return roles
         async with self.pool.acquire() as conn:
             conn: asyncpg.Connection
             before = json.loads(
@@ -181,6 +186,7 @@ class Database(commands.Cog):
             else:
                 for role in roles:
                     if role in before:
+                        roles.remove(role)
                         continue
                     if isinstance(role, int):
                         before.append(role)
@@ -189,6 +195,75 @@ class Database(commands.Cog):
                 json.dumps(before),
                 guild_id,
             )
+            return roles
+
+    async def remove_ticket_support_roles(self, guild_id, roles: int | list[int]):
+        """Returns a list of removed roles or None if settings aren't found"""
+        if not await self.has_settings(guild_id):
+            return None
+        
+        async with self.pool.acquire() as conn:
+            conn: asyncpg.Connection
+            before = json.loads(
+                await conn.fetchval(
+                    "SELECT support_roles FROM settings WHERE guild_id = $1", guild_id
+                )
+            )
+            removed_roles = []
+            if isinstance(roles, int):
+                roles = [roles]
+            for role in roles:
+                print(role, before)
+                if role in before:
+                    before.remove(role)
+                    removed_roles.append(role)
+            await conn.execute(
+                "UPDATE settings SET support_roles = $1 WHERE guild_id=$2",
+                json.dumps(before),
+                guild_id,
+            )
+            return removed_roles
+                
+        
+
+    async def get_ticket_support_roles(self, guild_id) -> list[discord.Role]:
+        if not await self.has_settings(guild_id):
+            return None
+        async with self.pool.acquire() as conn:
+            conn: asyncpg.Connection
+            support_roles: list = json.loads(
+                await conn.fetchval(
+                    "SELECT support_roles FROM settings WHERE guild_id = $1", guild_id
+                )
+            )
+        guild = self.bot.get_guild(guild_id)
+        roles = []
+        for r in support_roles:
+            role = guild.get_role(r)
+            if not role:
+                continue
+            roles.append(role)
+        return roles
+    
+    async def get_ticket_admin_roles(self, guild_id) -> list[discord.Role]:
+        if not await self.has_settings(guild_id):
+            return None
+        async with self.pool.acquire() as conn:
+            conn: asyncpg.Connection
+            admin_roles: list = json.loads(
+                await conn.fetchval(
+                    "SELECT admin_roles FROM settings WHERE guild_id = $1", guild_id
+                )
+            )
+        guild = self.bot.get_guild(guild_id)
+        roles = []
+        for r in admin_roles:
+            role = guild.get_role(r)
+            if not role:
+                continue
+            roles.append(role)
+        return roles
+
 
 async def setup(bot):
     db = Database(bot)

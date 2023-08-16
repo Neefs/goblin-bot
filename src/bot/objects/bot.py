@@ -12,7 +12,7 @@ import traceback as tb
 import json
 
 
-class TicketBot(commands.AutoShardedBot):
+class GoblinBot(commands.AutoShardedBot):
     def __init__(self, **options):
         self.default_prefix = options.get("prefix", ".")
         super().__init__(self.get_prefix, **options)

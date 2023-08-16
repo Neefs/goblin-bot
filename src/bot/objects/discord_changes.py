@@ -2,6 +2,9 @@ from typing import Any
 import discord
 import traceback as tb
 
+from discord.app_commands.errors import AppCommandError
+from discord.interactions import Interaction
+
 
 class Embed(discord.Embed):
     _color = 0xFFC0CB
@@ -39,6 +42,32 @@ class View(discord.ui.View):
         error: Exception,
         item: discord.ui.Item[Any],
     ) -> None:
+        bot = interaction.client
+        embed = Embed(title="Error", description=f"There has been an error:")
+        traceback = "".join(
+            tb.format_exception(type(error), error, error.__traceback__)
+        )
+        bot.logger.error(traceback)
+        link = await bot.post_code(traceback)
+        if len(traceback) >= 2000:
+            traceback = f"Error too long use the link provided below."
+        embed.description += f"\n```py\n{traceback}```\nError also located here: {link}"
+        await self._respond_with_check(interaction, embed)
+
+class Group(discord.app_commands.Group):
+    @staticmethod
+    async def _respond_with_check(
+        interaction: discord.Interaction, embed: discord.Embed, ephemeral: bool = True
+    ) -> None:
+        try:
+            await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+        except (discord.InteractionResponded, discord.errors.HTTPException):
+            try:
+                await interaction.followup.send(embed=embed)
+            except:
+                await interaction.channel.send(embed=embed)
+
+    async def on_error(self, interaction: Interaction, error: AppCommandError) -> None:
         bot = interaction.client
         embed = Embed(title="Error", description=f"There has been an error:")
         traceback = "".join(
