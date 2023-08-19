@@ -224,6 +224,32 @@ class Database(commands.Cog):
             )
             return removed_roles
                 
+    async def remove_ticket_admin_roles(self, guild_id, roles: int | list[int]):
+        """Returns a list of removed roles or None if settings aren't found"""
+        if not await self.has_settings(guild_id):
+            return None
+        
+        async with self.pool.acquire() as conn:
+            conn: asyncpg.Connection
+            before = json.loads(
+                await conn.fetchval(
+                    "SELECT admin_roles FROM settings WHERE guild_id = $1", guild_id
+                )
+            )
+            removed_roles = []
+            if isinstance(roles, int):
+                roles = [roles]
+            for role in roles:
+                print(role, before)
+                if role in before:
+                    before.remove(role)
+                    removed_roles.append(role)
+            await conn.execute(
+                "UPDATE settings SET admin_roles = $1 WHERE guild_id=$2",
+                json.dumps(before),
+                guild_id,
+            )
+            return removed_roles
         
 
     async def get_ticket_support_roles(self, guild_id) -> list[discord.Role]:

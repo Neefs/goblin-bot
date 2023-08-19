@@ -77,7 +77,7 @@ class Settings(commands.GroupCog, name="settings"):
         await interaction.response.send_message("test")
 
     @admin_role_group.command(
-        name="add", description="adds a admin role"
+        name="add", description="Adds an admin role"
     )
     async def admin_role_add(self, interaction:discord.Interaction, role:discord.Role):
         roleadded = role.id == (await self.bot.db.add_ticket_admin_roles(interaction.guild.id, role.id))
@@ -85,6 +85,21 @@ class Settings(commands.GroupCog, name="settings"):
             await interaction.response.send_message(f"{role.mention} added to admin roles", ephemeral=True)
         else:
             await interaction.response.send_message(f"{role.mention} couldn't be added. Is this role already an admin role?", ephemeral=True)
+
+
+    @admin_role_group.command(
+        name="remove", description="Removes an admin role"
+    )
+    async def admin_role_remove(self, interaction:discord.Interaction, role:discord.Role):
+        roleremoved = await self.bot.db.remove_ticket_support_roles(interaction.guild.id, role.id)
+        if roleremoved is None:
+            await interaction.response.send_message(f"No settings found. Have you run the setup command yet?", ephemeral=True)
+            return
+        roleremoved = role.id in roleremoved
+        if roleremoved:
+            await interaction.response.send_message(f"{role.mention} removed from support roles", ephemeral=True)
+        else:
+            await interaction.response.send_message(f"{role.mention} couldn't be removed. Is this role a support role?", ephemeral=True)
 
 
 
