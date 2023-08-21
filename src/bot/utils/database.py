@@ -252,7 +252,7 @@ class Database(commands.Cog):
             return removed_roles
         
 
-    async def get_ticket_support_roles(self, guild_id) -> list[discord.Role]:
+    async def get_ticket_support_roles(self, guild_id) -> list[discord.Role] | None:
         if not await self.has_settings(guild_id):
             return None
         async with self.pool.acquire() as conn:
@@ -271,7 +271,7 @@ class Database(commands.Cog):
             roles.append(role)
         return roles
     
-    async def get_ticket_admin_roles(self, guild_id) -> list[discord.Role]:
+    async def get_ticket_admin_roles(self, guild_id) -> list[discord.Role] | None:
         if not await self.has_settings(guild_id):
             return None
         async with self.pool.acquire() as conn:
@@ -289,6 +289,17 @@ class Database(commands.Cog):
                 continue
             roles.append(role)
         return roles
+    
+    async def get_ticket_category(self, guild_id) -> int | None:
+        if not await self.has_settings(guild_id):
+            return None
+        async with self.pool.acquire() as conn:
+            conn:asyncpg.Connection
+            ticket_category = await conn.fetchval(
+                "SELECT ticket_category FROM settings WHERE guild_id = $1", guild_id
+            )
+            return ticket_category
+            
 
 
 async def setup(bot):

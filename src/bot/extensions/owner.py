@@ -18,8 +18,7 @@ class Owner(commands.Cog):
     async def on_ready(self):
         self.bot.logger.info(f"✅ {self.__class__.__name__} is ready!")
 
-    @commands.group(invoke_without_command=True)
-    @commands.is_owner()
+    @commands.group(invoke_without_command=True, hidden=True)
     @commands.guild_only()
     async def sync(self, ctx: commands.Context, guild_id: Optional[int], copy: bool = False) -> None:
         """Syncs the slash commands with the given guild"""
@@ -36,7 +35,6 @@ class Owner(commands.Cog):
         await ctx.send(f'Successfully synced {len(commands)} commands')
 
     @sync.command(name='global')
-    @commands.is_owner()
     async def sync_global(self, ctx: commands.Context):
         """Syncs the commands globally"""
 
@@ -52,8 +50,10 @@ class Owner(commands.Cog):
             await self.bot.load_extension(module)
         except commands.ExtensionError as e:
             await ctx.send(f"{e.__class__.__name__}: {e}")
+            await self.bot.logger.error(f"{e.__class__.__name__}: {e}")
         else:
             await ctx.send(f"\n📥`{module}`")
+            await self.bot.logger.info(f"{module} loaded")
     
     @commands.command(hidden=True)
     async def unload(self, ctx:commands.Context, *, module: str):
@@ -63,8 +63,11 @@ class Owner(commands.Cog):
             await self.bot.unload_extension(module)
         except commands.ExtensionError as e:
             await ctx.send(f"{e.__class__.__name__}: {e}")
+            await self.bot.logger.error(f"{e.__class__.__name__}: {e}")
         else:
-            await ctx.send(f"\n📤`{module}`")       
+            await ctx.send(f"\n📤`{module}`") 
+            await self.bot.logger.info(f"{module} unloaded")
+                  
 
     @commands.command(name="reload", hidden=True)
     async def _reload(self, ctx:commands.Context, *, module: str):
@@ -74,8 +77,10 @@ class Owner(commands.Cog):
             await self.bot.reload_extension(module)
         except commands.ExtensionError as e:
             await ctx.send(f"{e.__class__.__name__}: {e}")
+            await self.bot.logger.error(f"{e.__class__.__name__}: {e}")
         else:
-            await ctx.send(f"\n🔁`{module}`")    
+            await ctx.send(f"\n🔁`{module}`")
+            await self.bot.logger.info(f"{module} reloaded")    
         
 
 

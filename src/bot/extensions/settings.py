@@ -4,6 +4,7 @@ from bot.objects.discord_changes import Embed, Group
 import discord
 from bot.objects.bot import GoblinBot
 from bot.utils.checks import is_ticket_admin
+from typing import Optional
 
 
 class Settings(commands.GroupCog, name="settings"):
@@ -24,8 +25,31 @@ class Settings(commands.GroupCog, name="settings"):
         name="list", description="Gives you a list of all the settings"
     )
     async def _list(self, interaction: discord.Interaction):
-        setting_to_command = []
-        await interaction.response.send_message("Coming sooooooon")
+        settings = {
+            "support_roles": await self.bot.db.get_ticket_support_roles(interaction.guild.id) or [],
+            "admin_roles": await self.bot.db.get_ticket_admin_roles(interaction.guild.id) or [],
+            "ticket_category": await self.bot.db.get_ticket_category(interaction.guild.id)
+        }
+        embed = Embed(title=f"{interaction.guild.name}'s settings")
+        embed.add_field(name="Support Roles", value= "None" if settings["support_roles"] == [] else ", ".join([role.mention for role in settings["support_roles"]]), inline=False)
+        embed.add_field(name="Admin Roles", value= "None" if settings["admin_roles"] == [] else ", ".join([role.mention for role in settings["admin_roles"]]), inline=False)
+        embed.add_field(name="Ticket Category", value=f"<#{settings['ticket_category']}>" if settings["ticket_category"] else "Not set", inline=False)
+        
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        
+    @app_commands.command(
+        description="Sets ticket category"
+    )
+    async def ticket_category(self, interaction:discord.Interaction, category:Optional[discord.CategoryChannel]):
+        if not category:
+            cat = await self.bot.db.get_ticket_category(interaction.guild.id)
+            if not cat:
+                await interaction.response.send_message("Category not set")
+                return
+            await interaction.response.send_message(embed=Embed(description=f"Category: <#{category}>"))
+            return
+        #set ticket category here
+            
 
     support_role_group = Group(name="support_role")
     admin_role_group  = Group(name="admin_role")
