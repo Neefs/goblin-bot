@@ -6,6 +6,8 @@ def is_ticket_admin():
     async def predicate(interaction:discord.Interaction):
         if not interaction.guild:
             raise app_commands.errors.NoPrivateMessage("This command can only be run in a guild.")
+        if interaction.user.guild_permissions.administrator:
+            return True
         admin_roles = await interaction.client.db.get_ticket_admin_roles(interaction.guild.id)
         if admin_roles is None:
             raise NotSetup()

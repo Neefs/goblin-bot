@@ -24,6 +24,7 @@ class Settings(commands.GroupCog, name="settings"):
     @app_commands.command(
         name="list", description="Gives you a list of all the settings"
     )
+    @is_ticket_admin()
     async def _list(self, interaction: discord.Interaction):
         settings = {
             "support_roles": await self.bot.db.get_ticket_support_roles(interaction.guild.id) or [],
@@ -40,6 +41,7 @@ class Settings(commands.GroupCog, name="settings"):
     @app_commands.command(
         description="Sets ticket category"
     )
+    @is_ticket_admin()
     async def ticket_category(self, interaction:discord.Interaction, category:Optional[discord.CategoryChannel]):
         if not category:
             cat = await self.bot.db.get_ticket_category(interaction.guild.id)
@@ -55,16 +57,12 @@ class Settings(commands.GroupCog, name="settings"):
     support_role_group = Group(name="support_role")
     admin_role_group  = Group(name="admin_role")
 
-    @support_role_group.command(
-        name="help", description="Sends help message for this group."
-    )
-    @is_ticket_admin()
-    async def support_role_help(self, interaction:discord.Interaction):
-        await interaction.response.send_message("test")
+
 
     @support_role_group.command(
         name="add", description="adds a support role"
     )
+    @is_ticket_admin()
     async def support_role_add(self, interaction:discord.Interaction, role:discord.Role):
         roleadded = role.id == (await self.bot.db.add_ticket_support_roles(interaction.guild.id, role.id))
         if roleadded:
@@ -75,6 +73,7 @@ class Settings(commands.GroupCog, name="settings"):
     @support_role_group.command(
         name="remove", description="Removes a support role."
     )
+    @is_ticket_admin()
     async def support_role_remove(self, interaction:discord.Interaction, role: discord.Role):
         roleremoved = await self.bot.db.remove_ticket_support_roles(interaction.guild.id, role.id)
         if roleremoved is None:
@@ -88,22 +87,17 @@ class Settings(commands.GroupCog, name="settings"):
 
 
     @support_role_group.command(
-        name="list", description="lists all the support roles in this server"
+        name="list", description="Lists all the support roles in this server"
     )
+    @is_ticket_admin()
     async def support_role_list(self, interaction:discord.Interaction):
         roles = await self.bot.db.get_ticket_support_roles(interaction.guild.id)
         await interaction.response.send_message(embed=Embed(title="Support Roles", description=",".join(role.mention for role in roles) if roles and roles != [] else "None"), ephemeral=True)
 
-
-    @admin_role_group.command(
-        name="help", description="Sends help message for this group."
-    )
-    async def admin_role_help(self, interaction:discord.Interaction):
-        await interaction.response.send_message("test")
-
     @admin_role_group.command(
         name="add", description="Adds an admin role"
     )
+    @app_commands.checks.has_permissions(administrator=True)
     async def admin_role_add(self, interaction:discord.Interaction, role:discord.Role):
         roleadded = role.id == (await self.bot.db.add_ticket_admin_roles(interaction.guild.id, role.id))
         if roleadded:
@@ -115,6 +109,7 @@ class Settings(commands.GroupCog, name="settings"):
     @admin_role_group.command(
         name="remove", description="Removes an admin role"
     )
+    @app_commands.checks.has_permissions(administrator=True)
     async def admin_role_remove(self, interaction:discord.Interaction, role:discord.Role):
         roleremoved = await self.bot.db.remove_ticket_support_roles(interaction.guild.id, role.id)
         if roleremoved is None:
@@ -126,6 +121,13 @@ class Settings(commands.GroupCog, name="settings"):
         else:
             await interaction.response.send_message(f"{role.mention} couldn't be removed. Is this role a support role?", ephemeral=True)
 
+    @admin_role_group.command(
+        name="list", description="Lists all the admin roles in this server" 
+    )
+    @app_commands.checks.has_permissions(administrator=True)
+    async def admin_role_list(self, interaction:discord.Interaction):
+        roles = await self.bot.db.get_ticket_admin_roles(interaction.guild.id)
+        await interaction.response.send_message(embed=Embed(title="Admin Roles", description=",".join(role.mention for role in roles) if roles and roles != [] else "None"), ephemeral=True)
 
 
 async def setup(bot):

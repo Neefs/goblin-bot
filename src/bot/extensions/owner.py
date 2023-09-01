@@ -52,10 +52,10 @@ class Owner(commands.Cog):
             await self.bot.load_extension(module)
         except commands.ExtensionError as e:
             await ctx.send(f"{e.__class__.__name__}: {e}")
-            await self.bot.logger.error(f"{e.__class__.__name__}: {e}")
+            self.bot.logger.error(f"{e.__class__.__name__}: {e}")
         else:
             await ctx.send(f"\n📥`{module}`")
-            await self.bot.logger.info(f"{module} loaded")
+            self.bot.logger.info(f"{module} loaded")
     
     @commands.command(hidden=True)
     async def unload(self, ctx:commands.Context, *, module: str):
@@ -65,10 +65,10 @@ class Owner(commands.Cog):
             await self.bot.unload_extension(module)
         except commands.ExtensionError as e:
             await ctx.send(f"{e.__class__.__name__}: {e}")
-            await self.bot.logger.error(f"{e.__class__.__name__}: {e}")
+            self.bot.logger.error(f"{e.__class__.__name__}: {e}")
         else:
             await ctx.send(f"\n📤`{module}`") 
-            await self.bot.logger.info(f"{module} unloaded")
+            self.bot.logger.info(f"{module} unloaded")
                   
 
     @commands.command(name="reload", hidden=True)
@@ -79,10 +79,10 @@ class Owner(commands.Cog):
             await self.bot.reload_extension(module)
         except commands.ExtensionError as e:
             await ctx.send(f"{e.__class__.__name__}: {e}")
-            await self.bot.logger.error(f"{e.__class__.__name__}: {e}")
+            self.bot.logger.error(f"{e.__class__.__name__}: {e}")
         else:
             await ctx.send(f"\n🔁`{module}`")
-            await self.bot.logger.info(f"{module} reloaded")    
+            self.bot.logger.info(f"{module} reloaded")    
         
 
 
