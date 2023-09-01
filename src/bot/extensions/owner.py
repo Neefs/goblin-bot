@@ -33,6 +33,7 @@ class Owner(commands.Cog):
 
         commands = await self.bot.tree.sync(guild=guild)
         await ctx.send(f'Successfully synced {len(commands)} commands')
+        self.bot.logger.info(f"{len(commands)} commands synced to {guild.id}")
 
     @sync.command(name='global')
     async def sync_global(self, ctx: commands.Context):
@@ -40,6 +41,7 @@ class Owner(commands.Cog):
 
         commands = await self.bot.tree.sync(guild=None)
         await ctx.send(f'Successfully synced {len(commands)} commands')
+        self.bot.logger.info(f"{len(commands)} commands synced globally")
 
 
     @commands.command(hidden=True)

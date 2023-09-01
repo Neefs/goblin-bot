@@ -46,10 +46,11 @@ class Settings(commands.GroupCog, name="settings"):
             if not cat:
                 await interaction.response.send_message("Category not set")
                 return
-            await interaction.response.send_message(embed=Embed(description=f"Category: <#{category}>"))
+            await interaction.response.send_message(embed=Embed(description=f"Category: <#{cat}>"))
             return
         #set ticket category here
-            
+        await self.bot.db.set_ticket_category(interaction.guild.id, category.id)
+        await interaction.response.send_message(embed=Embed(description=f"Category changed to {category.name}"))
 
     support_role_group = Group(name="support_role")
     admin_role_group  = Group(name="admin_role")

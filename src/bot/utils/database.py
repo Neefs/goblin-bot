@@ -300,6 +300,15 @@ class Database(commands.Cog):
             )
             return ticket_category
             
+    async def set_ticket_category(self, guild_id, ticket_category:int | discord.CategoryChannel):
+        if isinstance(ticket_category, discord.CategoryChannel):
+            ticket_category = ticket_category.id
+        if not await self.has_settings(guild_id):
+            await self.create_settings(guild_id, ticket_category=ticket_category)
+            return
+        async with self.pool.acquire() as conn:
+            conn:asyncpg.Connection
+            await conn.execute("UPDATE settings SET ticket_category = $1 WHERE guild_id = $2", ticket_category, guild_id)
 
 
 async def setup(bot):
